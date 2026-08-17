@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>إلى شروق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15100b;
+    --bg-deep:#0d0a07;
+    --paper:#ecdfc2;
+    --paper-shadow:#c9b483;
+    --ink:#2b2013;
+    --ink-soft:#4a3b26;
+    --brass:#a9814c;
+    --brass-light:#d3ac6e;
+    --ember:#a85338;
+    --rain:#26323b;
+    --glow: rgba(201,150,85,0.16);
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    overflow:hidden;
+    font-family:'Amiri', serif;
+    color:var(--ink);
+  }
+
+  #stage{
+    position:relative;
+    width:100%;
+    height:100vh;
+    height:100dvh;
+  }
+
+  /* ---------- ambient texture layers ---------- */
+
+  #grain{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:50;
+    opacity:0.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  #vignette{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:40;
+    background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%);
+  }
+
+  #dust{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:20;
+    overflow:hidden;
+  }
+  .mote{
+    position:absolute;
+    width:2px;
+    height:2px;
+    border-radius:50%;
+    background:var(--brass-light);
+    opacity:0;
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ opacity:0; transform:translateY(0) translateX(0); }
+    10%{ opacity:0.5; }
+    90%{ opacity:0.35; }
+    100%{ opacity:0; transform:translateY(-120px) translateX(20px); }
+  }
+
+  /* ---------- scenes ---------- */
+
+  .scene{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transform:scale(1);
+    transition:opacity 1.5s ease, transform 1.8s ease;
+  }
+  .scene.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .scene.leaving{
+    opacity:0;
+    transform:scale(1.12);
+    transition:opacity 1.3s ease, transform 1.9s ease;
+  }
+  .scene.entering{
+    transition:opacity 1.6s ease 0.5s, transform 2.2s ease 0.2s;
+  }
+
+  .desk{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 38%, var(--glow), transparent 70%),
+      repeating-linear-gradient(100deg, #1c140d 0px, #1c140d 2px, #17110b 3px, #17110b 40px),
+      linear-gradient(180deg, #100c08 0%, #0b0805 100%);
+  }
+
+  /* ---------- letter ---------- */
+
+  .letter{
+    position:relative;
+    z-index:5;
+    width:clamp(280px, 82vw, 460px);
+    padding:clamp(28px,6vw,48px) clamp(26px,6vw,42px) 34px;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.10), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    text-align:center;
+    box-shadow:
+      0 2px 0 rgba(255,255,255,0.15) inset,
+      0 30px 60px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(0,0,0,0.06);
+    clip-path:polygon(0.6% 1.2%, 99% 0%, 100% 98.4%, 0.3% 100%);
+    transform:rotate(-1.1deg);
+    transition:transform 1.6s cubic-bezier(.5,0,.2,1), opacity 1.4s ease, filter 1.6s ease;
+  }
+  .letter::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:0.5;
+    mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='3'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/></svg>");
+  }
+  .letter.opening{
+    transform:rotate(0deg) scale(1.08) translateY(-14px);
+    opacity:0;
+    filter:blur(1px);
+  }
+
+  .letter .to{
+    font-size:clamp(20px,4.6vw,26px);
+    margin:0 0 22px;
+    letter-spacing:0.5px;
+  }
+  .letter .body{
+    font-size:clamp(16px,3.8vw,19px);
+    line-height:2;
+    color:var(--ink-soft);
+    margin:0 0 30px;
+  }
+  .letter .hint{
+    font-family:'Aref Ruqaa', serif;
+    font-size:clamp(15px,3.6vw,18px);
+    color:var(--ember);
+    opacity:0.85;
+    margin:0 0 26px;
+  }
+
+  .ink-btn{
+    appearance:none;
+    border:1px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    font-family:'Amiri', serif;
+    font-size:16px;
+    padding:9px 30px;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    border-radius:2px;
+    transition:background 0.4s ease, color 0.4s ease, letter-spacing 0.4s ease;
+  }
+  .ink-btn:hover{
+    background:var(--ink);
+    color:var(--paper);
+    letter-spacing:1.5px;
+  }
+  .ink-btn:focus-visible{
+    outline:2px solid var(--brass-light);
+    outline-offset:3px;
+  }
+
+  /* ---------- gramophone scene ---------- */
+
+  #scene-gramophone .window{
+    position:absolute;
+    top:6%;
+    right:8%;
+    width:min(20vw,150px);
+    height:min(28vw,220px);
+    background:linear-gradient(180deg, rgba(120,150,170,0.10), rgba(30,40,48,0.35));
+    border:1px solid rgba(180,190,195,0.10);
+    overflow:hidden;
+    opacity:0.55;
+    display:none;
+  }
+  @media (min-width:640px){
+    #scene-gramophone .window{ display:block; }
+  }
+  .rain-line{
+    position:absolute;
+    top:-20%;
+    width:1px;
+    height:40%;
+    background:linear-gradient(180deg, transparent, rgba(210,225,235,0.5), transparent);
+    animation:fall linear infinite;
+  }
+  @keyframes fall{
+    0%{ transform:translateY(0); }
+    100%{ transform:translateY(260%); }
+  }
+
+  .gramophone-wrap{
+    position:relative;
+    z-index:5;
+    width:clamp(220px,58vw,300px);
+    display:flex;
+    justify-content:center;
+    filter:drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+  }
+
+  .tonearm{
+    transform-origin:238px 150px;
+    transform:rotate(-26deg);
+    transition:transform 1.4s cubic-bezier(.4,0,.2,1);
+  }
+  .gramophone-wrap.active .tonearm{
+    transform:rotate(0deg);
+  }
+  .gramophone-wrap.ended .tonearm{
+    transform:rotate(-26deg);
+    transition:transform 2.4s ease;
+  }
+
+  .vinyl-group{
+    transform-origin:150px 150px;
+    animation:spin 4.2s linear infinite;
+    animation-play-state:paused;
+  }
+  .gramophone-wrap.spinning .vinyl-group{
+    animation-play-state:running;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .horn-glow{
+    opacity:0.35;
+    transition:opacity 1.2s ease;
+  }
+  .gramophone-wrap.active .horn-glow{
+    opacity:0.85;
+  }
+
+  .song-info{
+    position:relative;
+    z-index:5;
+    text-align:center;
+    margin-top:22px;
+  }
+  .song-info .label{
+    font-family:'Aref Ruqaa', serif;
+    font-size:clamp(13px,3vw,15px);
+    color:var(--brass-light);
+    opacity:0.8;
+    margin:0 0 6px;
+  }
+  .song-info .title{
+    font-size:clamp(20px,4.6vw,26px);
+    color:var(--paper);
+    margin:0 0 4px;
+  }
+  .song-info .artist{
+    font-size:clamp(14px,3.4vw,16px);
+    color:var(--paper-shadow);
+    opacity:0.75;
+    margin:0 0 18px;
+  }
+
+  .note{
+    position:relative;
+    z-index:5;
+    max-width:380px;
+    margin:22px auto 0;
+    text-align:center;
+    font-family:'Aref Ruqaa', serif;
+    color:var(--paper-shadow);
+    opacity:0;
+    transform:translateY(8px);
+    transition:opacity 1.6s ease, transform 1.6s ease;
+    padding:0 20px;
+  }
+  .note.shown{
+    opacity:0.82;
+    transform:translateY(0);
+  }
+  .note p{
+    font-size:clamp(14px,3.4vw,16px);
+    line-height:1.9;
+    margin:0 0 10px;
+  }
+  .note .wish{
+    font-size:clamp(13px,3.2vw,14.5px);
+    opacity:0.75;
+  }
+
+  #ending{
+    position:absolute;
+    bottom:6%;
+    left:50%;
+    transform:translateX(-50%);
+    text-align:center;
+    opacity:0;
+    transition:opacity 2s ease;
+    z-index:5;
+    pointer-events:none;
+  }
+  #ending.shown{ opacity:0.9; }
+  #ending p{
+    font-family:'Aref Ruqaa', serif;
+    font-size:clamp(13px,3.2vw,15px);
+    color:var(--paper-shadow);
+    margin:0;
+  }
+  #ending .sig{
+    margin-top:8px;
+    font-size:clamp(14px,3.4vw,16px);
+    color:var(--brass-light);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="vignette"></div>
+  <div id="grain"></div>
+  <div id="dust"></div>
+
+  <main id="stage">
+
+    <section id="scene-letter" class="scene active">
+      <div class="desk"></div>
+      <div class="letter" id="letter">
+        <p class="to">إلى شروق</p>
+        <p class="body">فتحتِ الجواب… لكني تركت بداخله شيئًا آخر.</p>
+        <p class="hint">هناك أغنية صغيرة تنتظركِ.</p>
+        <button class="ink-btn" id="open-btn">افتحيها</button>
+      </div>
+    </section>
+
+    <section id="scene-gramophone" class="scene">
+      <div class="desk"></div>
+      <div class="window" id="window"></div>
+
+      <div class="gramophone-wrap" id="gramophone">
+        <svg viewBox="0 0 300 300" width="100%" height="100%">
+          <defs>
+            <radialGradient id="hornGrad" cx="30%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#e7c383"/>
+              <stop offset="55%" stop-color="#a9814c"/>
+              <stop offset="100%" stop-color="#6e5230"/>
+            </radialGradient>
+            <radialGradient id="discGrad" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#2a2a2a"/>
+              <stop offset="85%" stop-color="#151515"/>
+              <stop offset="100%" stop-color="#050505"/>
+            </radialGradient>
+            <linearGradient id="baseGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3a2a19"/>
+              <stop offset="100%" stop-color="#1e150c"/>
+            </linearGradient>
+          </defs>
+
+          <!-- horn -->
+          <g class="horn-glow">
+            <path d="M235,150 C275,110 288,55 258,20 C300,45 300,105 250,150 Z" fill="url(#hornGrad)"/>
+            <path d="M235,150 C275,110 288,55 258,20" fill="none" stroke="#5c431f" stroke-width="2" opacity="0.5"/>
+          </g>
+
+          <!-- base -->
+          <rect x="60" y="185" width="180" height="18" rx="4" fill="url(#baseGrad)"/>
+          <rect x="60" y="185" width="180" height="4" rx="2" fill="#4a3520" opacity="0.6"/>
+
+          <!-- turntable plinth -->
+          <ellipse cx="150" cy="182" rx="95" ry="14" fill="#241a10"/>
+
+          <!-- spinning disc -->
+          <g class="vinyl-group">
+            <circle cx="150" cy="150" r="78" fill="url(#discGrad)"/>
+            <circle cx="150" cy="150" r="66" fill="none" stroke="#000" stroke-width="1" opacity="0.5"/>
+            <circle cx="150" cy="150" r="54" fill="none" stroke="#000" stroke-width="1" opacity="0.4"/>
+            <circle cx="150" cy="150" r="42" fill="none" stroke="#000" stroke-width="1" opacity="0.4"/>
+            <circle cx="150" cy="150" r="16" fill="#a9814c"/>
+            <circle cx="150" cy="150" r="4" fill="#1a1206"/>
+          </g>
+
+          <!-- tonearm -->
+          <g class="tonearm">
+            <circle cx="238" cy="150" r="7" fill="#7a5b34"/>
+            <rect x="150" y="147" width="88" height="5" rx="2.5" fill="#c9a262"/>
+            <circle cx="150" cy="150" r="4" fill="#3a2a19"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="song-info">
+        <p class="label">الأغنية التي تركتها لكِ</p>
+        <p class="title" id="song-title"></p>
+        <p class="artist" id="song-artist"></p>
+        <button class="ink-btn" id="play-btn" style="border-color:var(--paper-shadow); color:var(--paper);">اسمعيها</button>
+      </div>
+
+      <div class="note" id="note">
+        <p>يمكن بعض الكلام ما بيتقالش بسهولة...<br>فقلت أسيبه في أغنية.</p>
+        <p class="wish">أتمنى تسمعيها وأنتِ مبسوطة.</p>
+      </div>
+
+      <div id="ending">
+        <p id="ending-line"></p>
+        <p class="sig" id="signature"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <audio id="audio" src="song.mp3" preload="none"></audio>
+
+  <script>
+    // ---- easily editable content ----
+    const CONFIG = {
+      songTitle: "دقّ الهوى ع الباب",
+      artist: "فيروز",
+      endingLine: "دلوقتي فهمتِ ليه كانت الأغنية جوّا الجواب.",
+      signature: "— يوسف"
+    };
+
+    document.getElementById('song-title').textContent = CONFIG.songTitle;
+    document.getElementById('song-artist').textContent = CONFIG.artist;
+    document.getElementById('ending-line').textContent = CONFIG.endingLine;
+    document.getElementById('signature').textContent = CONFIG.signature;
+
+    // ---- dust particles ----
+    const dustEl = document.getElementById('dust');
+    for(let i=0;i<16;i++){
+      const m = document.createElement('div');
+      m.className = 'mote';
+      m.style.left = Math.random()*100+'%';
+      m.style.top = 40+Math.random()*50+'%';
+      m.style.animationDuration = (8+Math.random()*10)+'s';
+      m.style.animationDelay = (Math.random()*8)+'s';
+      dustEl.appendChild(m);
+    }
+
+    // ---- rain ----
+    const windowEl = document.getElementById('window');
+    for(let i=0;i<14;i++){
+      const r = document.createElement('div');
+      r.className = 'rain-line';
+      r.style.left = Math.random()*100+'%';
+      r.style.animationDuration = (1+Math.random()*1.2)+'s';
+      r.style.animationDelay = (Math.random()*2)+'s';
+      windowEl.appendChild(r);
+    }
+
+    // ---- letter opening ----
+    const letter = document.getElementById('letter');
+    const sceneLetter = document.getElementById('scene-letter');
+    const sceneGramophone = document.getElementById('scene-gramophone');
+
+    // ---- gramophone / audio ----
+    const audio = document.getElementById('audio');
+    const gramophone = document.getElementById('gramophone');
+    const playBtn = document.getElementById('play-btn');
+    const note = document.getElementById('note');
+    const ending = document.getElementById('ending');
+
+    document.getElementById('open-btn').addEventListener('click', () => {
+      letter.classList.add('opening');
+      sceneLetter.classList.add('leaving');
+
+      // start the song right away, on the same click/gesture,
+      // so it begins as the letter transforms into the gramophone scene
+      audio.play().catch(() => {
+        // if the browser blocks it, the play/pause button still lets her start it manually
+      });
+
+      setTimeout(() => {
+        sceneLetter.classList.remove('active','leaving');
+        sceneGramophone.classList.add('active','entering');
+      }, 900);
+    });
+
+    playBtn.addEventListener('click', () => {
+      if(audio.paused){
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      gramophone.classList.remove('ended');
+      gramophone.classList.add('active','spinning');
+      playBtn.textContent = 'وقفيها';
+      note.classList.add('shown');
+    });
+
+    audio.addEventListener('pause', () => {
+      gramophone.classList.remove('spinning');
+      if(!audio.ended){
+        playBtn.textContent = 'اسمعيها';
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      gramophone.classList.remove('spinning','active');
+      gramophone.classList.add('ended');
+      playBtn.style.opacity = '0';
+      playBtn.style.pointerEvents = 'none';
+      setTimeout(() => ending.classList.add('shown'), 1200);
+    });
+  </script>
+</body>
+</html>
